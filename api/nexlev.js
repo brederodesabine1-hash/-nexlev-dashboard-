@@ -51,7 +51,7 @@ Return ONLY the JSON object, nothing else.
           type: 'url',
           url: 'https://prod.dashboard.nexlev.io/api/claude-mcp',
           name: 'NexLev',
-          authorization_token: process.env.NEXLEV_TOKEN,
+          ...(process.env.NEXLEV_TOKEN ? { authorization_token: process.env.NEXLEV_TOKEN } : {}),
         }
       ],
       messages: [{ role: 'user', content: prompt }],
