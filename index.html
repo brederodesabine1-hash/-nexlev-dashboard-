@@ -490,6 +490,8 @@ renderSections();
 </div>
 
 <script>
+const RAW_URL = 'https://raw.githubusercontent.com/brederodesabine1-hash/-nexlev-dashboard-/main/index.html';
+
 function showToast(msg, type='', icon='⏳'){
   const t = document.getElementById('refresh-toast');
   document.getElementById('toast-msg').textContent = msg;
@@ -497,40 +499,60 @@ function showToast(msg, type='', icon='⏳'){
   t.className = 'refresh-toast show' + (type ? ' '+type : '');
 }
 function hideToast(){ document.getElementById('refresh-toast').className = 'refresh-toast'; }
-function closeModal(){ document.getElementById('token-modal').classList.remove('show'); }
 
 async function handleRefresh(){
   const btn = document.getElementById('refresh-btn');
   btn.disabled = true;
-  btn.textContent = '⏳ FETCHING…';
-  showToast('Fetching fresh NexLev data… (~30–60s)', '', '⏳');
+  btn.textContent = '⏳ CHECKING…';
+  showToast('Checking for latest data…', '', '⏳');
 
   try {
-    const res = await fetch('/api/nexlev', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || 'Server error ' + res.status);
+    const res = await fetch(RAW_URL + '?t=' + Date.now());
+    if (!res.ok) throw new Error('Could not reach GitHub (' + res.status + ')');
+    const html = await res.text();
+
+    // Extract DATA block
+    const dataMatch = html.match(/const DATA = (\{[\s\S]*?\});\s*\n/);
+    if (!dataMatch) throw new Error('Could not parse data from source');
+    const freshData = JSON.parse(dataMatch[1]);
+
+    // Extract generated date
+    const dateMatch = html.match(/Generated (\d{4}-\d{2}-\d{2})/);
+    const freshDate = dateMatch ? dateMatch[1] : '?';
+
+    // Extract channel count
+    const countMatch = html.match(/(\d+) channels · 3 sectors/);
+    const freshCount = countMatch ? countMatch[1] : '?';
+
+    // Check if newer
+    const currentDate = document.querySelector('.meta')?.textContent.match(/Generated (\d{4}-\d{2}-\d{2})/)?.[1] || '';
+
+    if (freshDate === currentDate) {
+      btn.disabled = false;
+      btn.textContent = '↻ REFRESH DATA';
+      showToast('Already up to date · ' + freshDate, 'ok', '✓');
+      setTimeout(hideToast, 3000);
+      return;
     }
-    const data = await res.json();
 
-    // Update DATA in memory
-    if (data.highgrowth) DATA.highgrowth = data.highgrowth;
-    if (data.sleep)       DATA.sleep       = data.sleep;
-    if (data.automation)  DATA.automation  = data.automation;
+    // Update DATA
+    if (freshData.highgrowth) DATA.highgrowth = freshData.highgrowth;
+    if (freshData.sleep)      DATA.sleep      = freshData.sleep;
+    if (freshData.automation) DATA.automation = freshData.automation;
 
-    // Update generated date in header/footer
-    document.querySelectorAll('.meta div').forEach(el => {
-      if (el.textContent.startsWith('Generated')) el.textContent = 'Generated ' + data.generated;
+    // Update dates + count in DOM
+    document.querySelectorAll('.meta div, footer div').forEach(el => {
+      if (el.textContent.match(/Generated \d{4}/)) el.textContent = 'Generated ' + freshDate;
     });
-    document.querySelectorAll('footer div').forEach(el => {
-      if (el.textContent.startsWith('Generated')) el.textContent = 'Generated ' + data.generated;
+    document.querySelectorAll('.meta div').forEach(el => {
+      if (el.textContent.match(/\d+ channels · 3 sectors/)) el.textContent = freshCount + ' channels · 3 sectors';
     });
 
     updateKPIs();
     renderSections();
     btn.disabled = false;
     btn.textContent = '↻ REFRESH DATA';
-    showToast('Dashboard updated with fresh data!', 'ok', '✓');
+    showToast('Updated · ' + freshDate + ' · ' + freshCount + ' channels', 'ok', '✓');
     setTimeout(hideToast, 4000);
 
   } catch(e) {
