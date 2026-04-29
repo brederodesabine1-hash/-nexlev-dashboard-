@@ -511,10 +511,14 @@ async function handleRefresh(){
     if (!res.ok) throw new Error('Could not reach GitHub (' + res.status + ')');
     const html = await res.text();
 
-    // Extract DATA block
-    const dataMatch = html.match(/const DATA = (\{[\s\S]*?\});\s*\n/);
-    if (!dataMatch) throw new Error('Could not parse data from source');
-    const freshData = JSON.parse(dataMatch[1]);
+    // Extract DATA block robustly
+    const dataStart = html.indexOf('const DATA = ');
+    const sectionsStart = html.indexOf('\nconst SECTIONS = ', dataStart);
+    if (dataStart === -1 || sectionsStart === -1) throw new Error('Could not locate DATA block in source');
+    let dataStr = html.slice(dataStart + 'const DATA = '.length, sectionsStart).trim().replace(/;$/, '').trim();
+    let freshData;
+    try { freshData = JSON.parse(dataStr); }
+    catch(pe) { throw new Error('Could not parse channel data: ' + pe.message); }
 
     // Extract generated date
     const dateMatch = html.match(/Generated (\d{4}-\d{2}-\d{2})/);
