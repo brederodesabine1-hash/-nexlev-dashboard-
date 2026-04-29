@@ -144,6 +144,25 @@ td.num.orange{color:var(--acc)}
 footer{margin-top:48px;padding:24px 0 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-faint);flex-wrap:wrap;gap:12px}
 footer .powered{color:var(--ink-dim)}
 footer .powered b{color:var(--acc);font-weight:500}
+.refresh-btn{display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--bg);background:var(--acc);padding:5px 10px;border:none;cursor:pointer;transition:opacity .2s}
+.refresh-btn:hover{opacity:.85}
+.refresh-btn:disabled{opacity:.5;cursor:not-allowed}
+.refresh-toast{position:fixed;bottom:24px;right:24px;z-index:999;font-family:'JetBrains Mono',monospace;font-size:11px;padding:12px 18px;border:1px solid var(--line);background:var(--bg-2);color:var(--ink);display:none;gap:10px;align-items:center;max-width:320px}
+.refresh-toast.show{display:flex}
+.refresh-toast .t-icon{font-size:14px}
+.refresh-toast.ok{border-color:var(--acc-3);color:var(--acc-3)}
+.refresh-toast.err{border-color:var(--acc);color:var(--acc)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:none;place-items:center}
+.modal-overlay.show{display:grid}
+.modal-box{background:var(--bg-2);border:1px solid var(--line);padding:28px;max-width:440px;width:90%}
+.modal-box h3{font-family:'Fraunces',serif;font-weight:400;font-size:22px;margin-bottom:8px}
+.modal-box p{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-dim);line-height:1.6;margin-bottom:16px}
+.modal-box input{width:100%;background:var(--bg-3);border:1px solid var(--line);color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:12px;padding:10px 12px;outline:none;margin-bottom:12px}
+.modal-box input:focus{border-color:var(--acc)}
+.modal-box .m-btns{display:flex;gap:8px}
+.modal-box .m-btns button{flex:1;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;padding:9px;border:1px solid var(--line);cursor:pointer}
+.modal-box .m-btns .m-ok{background:var(--acc);color:var(--bg);border-color:var(--acc)}
+.modal-box .m-btns .m-cancel{background:transparent;color:var(--ink-dim)}
 @media (max-width:780px){
   .wrap{padding:20px}
   header{grid-template-columns:1fr}
@@ -172,7 +191,7 @@ footer .powered b{color:var(--acc);font-weight:500}
       <div><span class="dot"></span>Live · Nexlev API</div>
       <div>Generated 2026-04-29</div>
       <div>52 channels · 3 sectors</div>
-      <div style="margin-top:8px"><a href="https://github.com/brederodesabine1-hash/-nexlev-dashboard-/actions/workflows/refresh.yml" target="_blank" style="display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--bg);background:var(--acc);padding:5px 10px;text-decoration:none;border:none;cursor:pointer" title="Opens GitHub Actions — click Run workflow, wait ~2 min, then reload this page">↻ REFRESH DATA</a></div>
+      <div style="margin-top:8px"><button class="refresh-btn" id="refresh-btn" onclick="handleRefresh()">↻ REFRESH DATA</button></div>
     </div>
   </header>
 
@@ -463,6 +482,149 @@ document.getElementById('sort-select').addEventListener('change', e => {
 
 updateKPIs();
 renderSections();
+</script>
+
+<!-- Refresh modal -->
+<div class="modal-overlay" id="token-modal">
+  <div class="modal-box">
+    <h3>GitHub Token</h3>
+    <p>One-time setup. Paste a GitHub Personal Access Token with <b>workflow</b> scope. Stored only in your browser — never sent anywhere except GitHub.</p>
+    <p style="margin-bottom:8px">Create one at: <a href="https://github.com/settings/tokens/new?scopes=workflow" target="_blank" style="color:var(--acc-4)">github.com/settings/tokens/new</a> → check <b>workflow</b></p>
+    <input type="password" id="token-input" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off">
+    <div class="m-btns">
+      <button class="m-cancel" onclick="closeModal()">Cancel</button>
+      <button class="m-ok" onclick="saveToken()">Save &amp; Refresh</button>
+    </div>
+  </div>
+</div>
+
+<div class="refresh-toast" id="refresh-toast">
+  <span class="t-icon" id="toast-icon">⏳</span>
+  <span id="toast-msg">Triggering refresh…</span>
+</div>
+
+<script>
+const REPO = 'brederodesabine1-hash/-nexlev-dashboard-';
+const WORKFLOW = 'refresh.yml';
+const TOKEN_KEY = 'nexlev_gh_token';
+
+function showToast(msg, type='', icon='⏳'){
+  const t = document.getElementById('refresh-toast');
+  document.getElementById('toast-msg').textContent = msg;
+  document.getElementById('toast-icon').textContent = icon;
+  t.className = 'refresh-toast show' + (type ? ' '+type : '');
+}
+function hideToast(){ document.getElementById('refresh-toast').className = 'refresh-toast'; }
+
+function closeModal(){
+  document.getElementById('token-modal').classList.remove('show');
+}
+
+function saveToken(){
+  const val = document.getElementById('token-input').value.trim();
+  if(!val){ alert('Paste a token first.'); return; }
+  localStorage.setItem(TOKEN_KEY, val);
+  closeModal();
+  triggerWorkflow(val);
+}
+
+async function handleRefresh(){
+  const token = localStorage.getItem(TOKEN_KEY);
+  if(!token){
+    document.getElementById('token-modal').classList.add('show');
+    return;
+  }
+  triggerWorkflow(token);
+}
+
+async function triggerWorkflow(token){
+  const btn = document.getElementById('refresh-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ REFRESHING…';
+  showToast('Triggering GitHub Actions…', '', '⏳');
+
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${REPO}/actions/workflows/${WORKFLOW}/dispatches`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `token ${token}`,
+          'Accept': 'application/vnd.github+json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ref: 'main' }),
+      }
+    );
+
+    if(res.status === 401 || res.status === 403){
+      localStorage.removeItem(TOKEN_KEY);
+      btn.disabled = false;
+      btn.textContent = '↻ REFRESH DATA';
+      showToast('Token invalid or expired. Click refresh to re-enter.', 'err', '✕');
+      setTimeout(hideToast, 4000);
+      return;
+    }
+
+    if(!res.ok){
+      throw new Error('GitHub API returned ' + res.status);
+    }
+
+    showToast('Workflow started — refreshing in ~2 min…', '', '⏳');
+    pollAndReload(token);
+
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '↻ REFRESH DATA';
+    showToast('Error: ' + e.message, 'err', '✕');
+    setTimeout(hideToast, 5000);
+  }
+}
+
+async function pollAndReload(token){
+  const btn = document.getElementById('refresh-btn');
+  let attempts = 0;
+  const max = 20; // ~5 min timeout
+
+  const poll = setInterval(async () => {
+    attempts++;
+    try {
+      const res = await fetch(
+        `https://api.github.com/repos/${REPO}/actions/workflows/${WORKFLOW}/runs?per_page=1`,
+        { headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github+json' } }
+      );
+      const data = await res.json();
+      const run = data.workflow_runs?.[0];
+
+      if(run?.status === 'completed' && run?.conclusion === 'success'){
+        clearInterval(poll);
+        showToast('Done! Reloading dashboard…', 'ok', '✓');
+        setTimeout(() => location.reload(), 1500);
+        return;
+      }
+      if(run?.status === 'completed' && run?.conclusion !== 'success'){
+        clearInterval(poll);
+        btn.disabled = false;
+        btn.textContent = '↻ REFRESH DATA';
+        showToast('Workflow failed. Check GitHub Actions.', 'err', '✕');
+        return;
+      }
+
+      const elapsed = attempts * 15;
+      showToast(`Refreshing data… ${elapsed}s elapsed`, '', '⏳');
+
+    } catch(e) {
+      // network error, keep polling
+    }
+
+    if(attempts >= max){
+      clearInterval(poll);
+      btn.disabled = false;
+      btn.textContent = '↻ REFRESH DATA';
+      showToast('Timed out. Check GitHub Actions manually.', 'err', '✕');
+    }
+  }, 15000);
+}
 </script>
 </body>
 </html>
