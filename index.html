@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Channel Intel · NexLev Niche Research Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,800;9..144,900&family=JetBrains+Mono:wght@400;500;600&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0b0d;--bg-2:#111216;--bg-3:#16181d;--line:#22252c;--line-2:#2c3038;
+  --ink:#f3efe8;--ink-dim:#9ca0aa;--ink-faint:#5a5e68;
+  --acc:#ff5e1a;--acc-2:#ffd166;--acc-3:#3ad29f;--acc-4:#5b8bff;
+  --vid:#ff5e1a;--slp:#9d7bff;
+  --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font-family:'Inter Tight',sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:var(--grain);pointer-events:none;opacity:.4;z-index:1;mix-blend-mode:overlay}
+body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at top,rgba(255,94,26,0.06),transparent 60%),radial-gradient(ellipse at bottom right,rgba(157,123,255,0.05),transparent 60%);pointer-events:none;z-index:0}
+.wrap{position:relative;z-index:2;max-width:1480px;margin:0 auto;padding:32px 36px 64px}
+header{display:grid;grid-template-columns:1fr auto;align-items:end;gap:32px;padding-bottom:28px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{width:42px;height:42px;border:1.5px solid var(--ink);display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:900;font-style:italic;font-size:24px;letter-spacing:-1px;background:var(--bg-2)}
+.logo span{display:block;transform:translateY(-1px)}
+.brand-text .label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:var(--ink-faint);text-transform:uppercase;margin-bottom:2px}
+.brand-text .name{font-family:'Fraunces',serif;font-weight:300;font-size:30px;letter-spacing:-.02em;line-height:1}
+.brand-text .name em{font-style:italic;font-weight:400;color:var(--acc)}
+.meta{text-align:right;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-dim);line-height:1.7}
+.meta .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--acc-3);margin-right:6px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+h1{font-family:'Fraunces',serif;font-weight:300;font-size:clamp(48px,7vw,82px);letter-spacing:-.035em;line-height:.95;margin:36px 0 16px;color:var(--ink)}
+h1 em{font-style:italic;font-weight:400;color:var(--acc)}
+.lede{max-width:680px;color:var(--ink-dim);font-size:15px;line-height:1.55;margin-bottom:28px}
+.lede strong{color:var(--ink);font-weight:500}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin:28px 0 36px;border:1px solid var(--line);background:var(--bg-2)}
+.kpi{padding:18px 22px;border-right:1px solid var(--line);position:relative}
+.kpi:last-child{border-right:0}
+.kpi .k-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:var(--ink-faint);text-transform:uppercase;margin-bottom:8px}
+.kpi .k-val{font-family:'Fraunces',serif;font-weight:400;font-size:30px;letter-spacing:-.02em;line-height:1}
+.kpi .k-sub{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-dim);margin-top:4px}
+.kpi.accent .k-val{color:var(--acc)}
+.kpi.accent2 .k-val{color:var(--acc-3)}
+.kpi.accent3 .k-val{color:var(--acc-2)}
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:0}
+.tab{flex:1;background:transparent;border:0;border-right:1px solid var(--line);padding:22px 24px;text-align:left;color:var(--ink-dim);cursor:pointer;font-family:inherit;transition:all .25s ease;position:relative;overflow:hidden}
+.tab:last-child{border-right:0}
+.tab::before{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:transparent;transition:all .3s cubic-bezier(.6,0,.2,1);transform-origin:left}
+.tab .num{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--ink-faint);display:block;margin-bottom:6px}
+.tab .t-name{font-family:'Fraunces',serif;font-weight:400;font-size:24px;letter-spacing:-.01em;line-height:1.05;color:var(--ink-dim);margin-bottom:6px;transition:color .25s}
+.tab .t-name em{font-style:italic;color:var(--ink-faint)}
+.tab .t-meta{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-faint);letter-spacing:.05em}
+.tab:hover .t-name{color:var(--ink)}
+.tab.active{background:var(--bg-2)}
+.tab.active .t-name{color:var(--ink)}
+.tab.active .num{color:var(--acc)}
+.tab.active::before{background:var(--acc);height:2px}
+.tab[data-tab="highgrowth"].active::before{background:var(--vid)}
+.tab[data-tab="sleep"].active::before{background:var(--slp)}
+.controls{display:flex;gap:14px;align-items:center;padding:18px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.search{flex:1;min-width:240px;display:flex;align-items:center;gap:10px;background:var(--bg-2);border:1px solid var(--line);padding:10px 14px}
+.search input{background:transparent;border:0;outline:0;color:var(--ink);font-family:inherit;font-size:14px;width:100%}
+.search input::placeholder{color:var(--ink-faint)}
+.search svg{flex-shrink:0;color:var(--ink-faint)}
+.sort{display:flex;align-items:center;gap:8px}
+.sort label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.15em;color:var(--ink-faint);text-transform:uppercase}
+.sort select{background:var(--bg-2);border:1px solid var(--line);color:var(--ink);font-family:inherit;font-size:13px;padding:9px 12px;cursor:pointer;outline:0}
+.view-toggle{display:flex;border:1px solid var(--line);background:var(--bg-2)}
+.view-toggle button{background:transparent;border:0;padding:9px 12px;color:var(--ink-faint);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em}
+.view-toggle button.active{background:var(--ink);color:var(--bg)}
+.section{display:none;padding-top:24px}
+.section.active{display:block;animation:fadein .35s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.section-intro{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;gap:24px;flex-wrap:wrap}
+.section-intro .desc{max-width:680px;color:var(--ink-dim);font-size:13px;line-height:1.6}
+.section-intro .desc .filter-tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg-3);border:1px solid var(--line);padding:3px 8px;margin-right:6px;color:var(--ink);letter-spacing:.05em}
+.section-count{font-family:'Fraunces',serif;font-weight:300;font-style:italic;font-size:48px;line-height:1;color:var(--ink-dim)}
+.section-count .num{color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px}
+.card{background:var(--bg-2);border:1px solid var(--line);padding:18px;display:flex;flex-direction:column;gap:14px;transition:all .25s ease;cursor:pointer;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;width:3px;height:0;background:var(--acc);transition:height .35s cubic-bezier(.6,0,.2,1)}
+.card:hover{border-color:var(--line-2);background:var(--bg-3);transform:translateY(-2px)}
+.card:hover::before{height:100%}
+.card[data-section="highgrowth"]:hover::before{background:var(--vid)}
+.card[data-section="sleep"]:hover::before{background:var(--slp)}
+.c-head{display:flex;gap:12px;align-items:flex-start}
+.c-thumb{width:52px;height:52px;border-radius:50%;background:var(--bg-3);object-fit:cover;flex-shrink:0;border:1px solid var(--line)}
+.c-title-block{flex:1;min-width:0}
+.c-title{font-family:'Fraunces',serif;font-weight:500;font-size:18px;letter-spacing:-.01em;line-height:1.15;color:var(--ink);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-handle{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-faint);letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;padding:12px;background:rgba(0,0,0,0.25);border:1px solid var(--line)}
+.stat{display:flex;flex-direction:column}
+.stat .s-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.15em;color:var(--ink-faint);text-transform:uppercase}
+.stat .s-val{font-family:'Fraunces',serif;font-weight:400;font-size:18px;letter-spacing:-.01em;color:var(--ink);line-height:1.1;margin-top:2px}
+.stat .s-val.green{color:var(--acc-3)}
+.stat .s-val.yellow{color:var(--acc-2)}
+.stat .s-val.orange{color:var(--acc)}
+.stat .s-val.purple{color:var(--slp)}
+.c-meta{display:flex;gap:8px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-dim)}
+.tag{padding:3px 7px;border:1px solid var(--line);background:var(--bg-3);letter-spacing:.04em}
+.tag.cat{color:var(--acc-4);border-color:rgba(91,139,255,0.3)}
+.tag.fmt{color:var(--acc-2);border-color:rgba(255,209,102,0.3)}
+.tag.q-high{color:var(--acc-3);border-color:rgba(58,210,159,0.3)}
+.tag.q-mid{color:var(--ink-dim)}
+.tag.faceless{color:var(--slp);border-color:rgba(157,123,255,0.3)}
+.c-foot{display:flex;justify-content:space-between;align-items:center;padding-top:6px;border-top:1px dashed var(--line);font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-faint)}
+.c-foot .outlier{display:flex;align-items:center;gap:6px}
+.c-foot .outlier .badge{background:var(--acc);color:var(--bg);font-weight:600;padding:2px 6px;font-size:9px}
+.c-foot .outlier .badge.med{background:var(--acc-2);color:var(--bg)}
+.c-foot .outlier .badge.low{background:var(--bg-3);color:var(--ink-dim);border:1px solid var(--line)}
+.c-foot a{color:var(--ink-dim);text-decoration:none;display:flex;align-items:center;gap:4px;transition:color .2s}
+.c-foot a:hover{color:var(--acc)}
+.table-view{display:none;overflow-x:auto;border:1px solid var(--line);background:var(--bg-2)}
+.section.active .table-view.active{display:block}
+.section.active .grid.active{display:grid}
+.section.active .grid:not(.active),.section.active .table-view:not(.active){display:none}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);font-weight:500;padding:14px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--bg-3)}
+td{padding:14px;border-bottom:1px solid var(--line);color:var(--ink-dim);vertical-align:middle}
+tr:hover td{background:var(--bg-3);color:var(--ink)}
+tr:last-child td{border-bottom:0}
+td.title{color:var(--ink);font-family:'Fraunces',serif;font-weight:500;font-size:15px;letter-spacing:-.01em}
+td.num{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;text-align:right}
+td.num.green{color:var(--acc-3)}
+td.num.orange{color:var(--acc)}
+td.num.purple{color:var(--slp)}
+.rpm-badge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:9px;padding:2px 6px;border:1px solid;letter-spacing:.05em}
+.rpm-badge.high{color:var(--acc-3);border-color:rgba(58,210,159,0.4)}
+.rpm-badge.mid{color:var(--acc-2);border-color:rgba(255,209,102,0.3)}
+.rpm-badge.base{color:var(--ink-dim);border-color:var(--line)}
+.t-link{color:var(--acc-4);text-decoration:none;font-family:'JetBrains Mono',monospace;font-size:11px}
+.t-link:hover{color:var(--acc);text-decoration:underline}
+.empty{padding:60px 20px;text-align:center;color:var(--ink-faint);font-family:'Fraunces',serif;font-style:italic;font-size:18px}
+footer{margin-top:48px;padding:24px 0 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-faint);flex-wrap:wrap;gap:12px}
+footer .powered{color:var(--ink-dim)}
+footer .powered b{color:var(--acc);font-weight:500}
+@media(max-width:780px){
+  .wrap{padding:20px}
+  header{grid-template-columns:1fr}
+  .meta{text-align:left}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .kpi{border-right:0;border-bottom:1px solid var(--line)}
+  .kpi:nth-child(odd){border-right:1px solid var(--line)}
+  .tabs{flex-direction:column}
+  .tab{border-right:0;border-bottom:1px solid var(--line)}
+  .grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo"><span>N</span></div>
+      <div class="brand-text">
+        <div class="label">Channel Intelligence · v2.0</div>
+        <div class="name">channel <em>intel</em></div>
+      </div>
+    </div>
+    <div class="meta">
+      <div><span class="dot"></span>Live · Nexlev API</div>
+      <div>Generated 2026-04-29</div>
+      <div>38 channels · 2 sectors</div>
+    </div>
+  </header>
+
+  <h1>New channel<br><em>velocity</em> — mapped.</h1>
+  <p class="lede">A working board of <strong>profitable YouTube channels</strong> launched in the last 90 days, across two sectors. Every channel is filtered against strict view, length, RPM, and age thresholds.</p>
+
+  <div class="kpis">
+    <div class="kpi accent">
+      <div class="k-label">Channels</div>
+      <div class="k-val">38</div>
+      <div class="k-sub">unique · across 2 sectors</div>
+    </div>
+    <div class="kpi accent2">
+      <div class="k-label">Combined Monthly Views</div>
+      <div class="k-val">45.2M</div>
+      <div class="k-sub">last 30 days</div>
+    </div>
+    <div class="kpi accent3">
+      <div class="k-label">Combined Monthly Rev</div>
+      <div class="k-val">$183.2K</div>
+      <div class="k-sub">est · ad revenue only</div>
+    </div>
+    <div class="kpi">
+      <div class="k-label">Median Channel Age</div>
+      <div class="k-val">~68d</div>
+      <div class="k-sub">all created &lt; 90 days ago</div>
+    </div>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="highgrowth" role="tab">
+      <span class="num">01 / HIGH-GROWTH</span>
+      <span class="t-name">Long-form <em>velocity</em></span>
+      <span class="t-meta">1M+ views · RPM $4+ · &lt;90d · avg 5K+ views/vid</span>
+    </button>
+    <button class="tab" data-tab="sleep" role="tab">
+      <span class="num">02 / SLEEP CHANNELS</span>
+      <span class="t-name">Long-form <em>ambient</em></span>
+      <span class="t-meta">40+ min avg · 200K+ views · RPM $4+ · &lt;90d</span>
+    </button>
+  </div>
+
+  <div class="controls">
+    <div class="search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="search-input" placeholder="Search channel name, tag, category, format…">
+    </div>
+    <div class="sort">
+      <label>Sort</label>
+      <select id="sort-select">
+        <option value="monthlyViews">Monthly Views</option>
+        <option value="monthlyRev">Monthly Revenue</option>
+        <option value="subs">Subscribers</option>
+        <option value="outlier">Outlier Score</option>
+        <option value="created">Newest</option>
+        <option value="avgViews">Avg Views/Video</option>
+        <option value="avgLen">Avg Length</option>
+        <option value="rpm">RPM</option>
+      </select>
+    </div>
+    <div class="view-toggle">
+      <button class="active" data-view="grid">GRID</button>
+      <button data-view="table">TABLE</button>
+    </div>
+  </div>
+
+  <div id="sections"></div>
+
+  <footer>
+    <div class="powered">Powered by <b>Nexlev</b> · Data via niche-finder vector search</div>
+    <div>Generated 2026-04-29</div>
+  </footer>
+</div>
+
+<script>
+const DATA = {
+  highgrowth: [{"id": "UCZLlmlwUbeIsxYQfDbBRivA", "title": "Grand Analyzer", "username": "@GrandAnalyzer", "thumb": "https://yt3.googleusercontent.com/-RxK82oNZWFNgG5G5IduUVHc9dP33EVrh-Rr8b2I8F48P4a1rDfLOWCkrVNbrrPgj2Nt2FTzaA=s160-c-k-c0x00ffffff-no-rj", "location": "—", "created": "2026-03-09", "firstVid": "2026-03-09", "lastVid": "2026-04-20", "faceless": true, "ai": false, "quality": "mid", "outlier": 23.61, "tags": ["youtube faceless / tiktok pages", "commentary", "internet culture", "celebrity"], "cat": "youtube faceless / tiktok pages", "fmt": "reviews", "subs": 1170, "monthlyRev": 8766.36, "monthlyViews": 2067849, "avgViews": 154881.69, "avgLen": 362.62, "uploadsWk": 0.25, "rpm": 4.2394, "videos": 16}, {"id": "UC3QxfJMeLGOekt0PDArtGzA", "title": "Vexora", "username": "@Vexora-w4q", "thumb": "https://yt3.googleusercontent.com/wHmdAoz6ZLCZO6NrO3s6Xs8yl6cMYebtSI9Bt8xdZFbU8s-78OD_9vdqFFjtpVePjL9c3kFdZg=s160-c-k-c0x00ffffff-no-rj", "location": "—", "created": "2026-03-07", "firstVid": "2026-03-13", "lastVid": "2026-04-21", "faceless": true, "ai": false, "quality": "mid", "outlier": 0.25, "tags": ["paranormal", "future & discoveries", "conspiracy theories", "science"], "cat": "paranormal", "fmt": "documentary", "subs": 17200, "monthlyRev": 10170.21, "monthlyViews": 2398997, "avgViews": 36311.1, "avgLen": 1204.46, "uploadsWk": 14, "rpm": 4.2394, "videos": 67}, {"id": "UCUVqFBfEjpQaxyJZDVIokJg", "title": "The Sky Lab", "username": "@TheSkyLab-u4j", "thumb": "https://yt3.googleusercontent.com/_pPLBl7S9CGq8LvWXKiRJ1QiC1Uqf7l-QHmo2FoNrJwSFwpfT_gUyIrQhLfAcXv4VXbtohpil3E=s160-c-k-c0x00ffffff-no-rj", "location": "CA", "created": "2026-02-20", "firstVid": "2026-02-24", "lastVid": "2026-04-21", "faceless": true, "ai": false, "quality": "mid", "outlier": 2.96, "tags": ["space & exploration", "science", "environment", "tech"], "cat": "space & exploration", "fmt": "documentary", "subs": 33400, "monthlyRev": 22879.1, "monthlyViews": 3238097, "avgViews": 58723.07, "avgLen": 6008.44, "uploadsWk": 7, "rpm": 7.0656, "videos": 57}, {"id": "UCyCSbQ8ycQFpptUz5k6nltw", "title": "American Food History", "username": "@AmericanFoodHistory", "thumb": "https://yt3.googleusercontent.com/3eq4wmiC3LdkWg7DT3AkBHJFH1pq7Oka9gy5qPMzvmsYqeDYHA1STLPPvpgZCf3FbF1JRuTveg=s160-c-k-c0x00ffffff-no-rj", "location": "US", "created": "2026-03-05", "firstVid": "2026-03-18", "lastVid": "2026-04-21", "faceless": true, "ai": false, "quality": "mid", "outlier": 2, "tags": ["history", "documentaries", "culture", "cooking"], "cat": "history", "fmt": "documentary", "subs": 8830, "monthlyRev": 4981.1, "monthlyViews": 1007113, "avgViews": 56084.22, "avgLen": 1626.28, "uploadsWk": 3.75, "rpm": 4.9459, "videos": 18}, {"id": "UCSDU975BassXQZGoJmvctNQ", "title": "Explainer Chris", "username": "@ExplainerChris", "thumb": "https://yt3.googleusercontent.com/sgJpJ5uNWLyCYakV4DzfiEgZQ0vCMMedKhucVowiCMUXrOGZqDflZQfK6uBXZcCPFG-ha9Tamw=s160-c-k-c0x00ffffff-no-rj", "location": "US", "created": "2026-03-06", "firstVid": "2026-03-08", "lastVid": "2026-04-18", "faceless": true, "ai": false, "quality": "mid", "outlier": 6.04, "tags": ["tech", "software", "computers", "educational"], "cat": "tech", "fmt": "educational", "subs": 12000, "monthlyRev": 5127.07, "monthlyViews": 1007830, "avgViews": 102933.7, "avgLen": 1003.9, "uploadsWk": 1.5, "rpm": 5.0872, "videos": 10}, {"id": "UCFCEKvkU5_ekTfBQuHrZi0Q", "title": "Money Simplified", "username": "@MoneySimplifiedx", "thumb": "https://yt3.googleusercontent.com/VaU_VNCPFsGYfOqVpzIhUpkpYYgVFMBhvTpMQKGm4W3V8itHX0-49p89c8gb8MpQkkrjscAjlA=s160-c-k-c0x00ffffff-no-rj", "location": "US", "created": "2026-02-05", "firstVid": "2026-03-12", "lastVid": "2026-04-08", "faceless": true, "ai": false, "quality": "mid", "outlier": 0.69, "tags": ["personal finance", "investing", "self improvement", "educational"], "cat": "personal finance", "fmt": "educational", "subs": 19900, "monthlyRev": 0, "monthlyViews": 1582647, "avgViews": 51382.86, "avgLen": 1093.83, "uploadsWk": 4, "rpm": 9.1853, "videos": 35}, {"id": "UCoUd-lH-8qDvjBtkFt-xYAA", "title": "Jiang Policy Insights", "username": "@JiangPolicyInsights", "thumb": "https://yt3.googleusercontent.com/c-cFrIy2NIExnrDj5Hv4yzHbvaHKOvdj3IXmS5MydB3CD32GHpcI1SZrEH920qlfu13trkrJ=s160-c-k-c0x00ffffff-no-rj", "location": "US", "created": "2026-04-11", "firstVid": "2026-04-11", "lastVid": "2026-04-21", "faceless": true, "ai": false, "quality": "mid", "outlier": 4.24, "tags": ["politics", "news", "military", "international relations"], "cat": "politics", "fmt": "news", "subs": 18900, "monthlyRev": 10411.92, "monthlyViews": 2232739, "avgViews": 111636.95, "avgLen": 1482.7, "uploadsWk": 5, "rpm": 4.6633, "videos": 20}, {"id": "UCzWF5c5MrU5TeDIkkA9ZpSg", "title": "Thunder News USA", "username": "@ThunderNewsUsa", "thumb": "https://yt3.googleusercontent.com/_OizEAkELrB4e9aDFZ1taKzwXzLKWNmSpxnDW0iqWNCjxViOxZpW02TrPxU9bLY8Vuq6Gl7kMQ=s160-c-k-c0x00ffffff-no-rj", "location": "—", "created": "2026-02-14", "firstVid": "2026-02-16", "lastVid": "2026-04-21", "faceless": true, "ai": false, "quality": "mid", "outlier": 0.95, "tags": ["news", "military", "politics", "breaking news"], "cat": "military", "fmt": "news", "subs": 8970, "monthlyRev": 0, "monthlyViews": 1192054, "avgViews": 24333.9, "avgLen": 880.3, "uploadsWk": 6.25, "rpm": 4.2394, "videos": 61}, {"id": "UC3EpqIjfEUiZi1GvWKCWyuA", "title": "POVrank", "username": "@POVrank", "thumb": "https://yt3.googleusercontent.com/P46Gvp5B3y78q9WKKLmuIaf2y9qWlKAZP7jn4RDGOcZzWIcRM-voMJbPduAzX5_ZRs757pOA-8o=s160-c-k-c0x00ffffff-no-rj", "location": "US", "created": "2026-03-03", "firstVid": "2026-03-04", "lastVid": "2026-04-21", "faceless": true, "ai": false, "quality": "mid", "outlier": 2.49, "tags": ["military", "history", "education", "storytelling"], "cat": "military", "fmt": "educational", "subs": 13900, "monthlyRev": 8649.34, "monthlyViews": 2040246, "avgViews": 49007.96, "avgLen": 1245.56, "uploadsWk": 7, "rpm": 4.2394, "videos": 45}, {"id": "UC_yOpuQ3E8pHf6Wvb_MCW9g", "title": "Off The Court", "username": "@OffTheCourtProductions", "thumb": "https://yt3.googleusercontent.com/O1or40mBE8JxdXDExZXR2dfALRH4BGRQ1kWya1lxuB2Jg-gACqS6_xP1BmZnxPV5N0o279HnHA=s160-c-k-c0x00ffffff-no-rj", "location": "SI", "created": "2026-02-17", "firstVid": "2026-02-26", "lastVid": "2026-04-12", "faceless": true, "ai": false, "quality": "high", "outlier": 16.78, "tags": ["basketball", "sports", "biographies", "documentary"], "cat": "basketball", "fmt": "documentary", "subs": 3400, "monthlyRev": 0, "monthlyViews": 1240785, "avgViews": 135498.17, "avgLen": 985.5, "uploadsWk": 0.75, "rpm": 4.9459, "videos": 12}, {"id": "UCgN4d23l66YIyT9h9oi8S3A", "title": "Wild Realms Studio", "username": "@WildRealmsStudio", "thumb": "https://yt3.googleusercontent.com/gH8yLXAsv3mSoPgOkNh9jMyfM-RqyjtWl5w9c5u5VqLvsRLRIXDbRh3aLZzD79z0tQG2pk5FhQ=s160-c-k-c0x00ffffff-no-rj", "location": "US", "created": "2026-02-16", "firstVid": "2026-02-18", "lastVid": "2026-04-18", "faceless": true, "ai": false, "quality": "high", "outlier": 17.94, "tags": ["wildlife", "nature documentary", "exploration", "science"], "cat": "wildlife", "fmt": "documentary", "subs": 19500, "monthlyRev": 12112.46, "monthlyViews": 2142857, "avgViews": 261687.82, "avgLen": 3509.64, "uploadsWk": 1.25, "rpm": 5.6525, "videos": 11}, {"id": "UCZkXbMH4DMKbpzh846FOqPQ", "title": "Vikings Life", "username": "@VikingsLife", "thumb": "https://yt3.googleusercontent.com/lYm0uou9agefnqVrJFI6VkTf1gbxWRVeTnAHt4bMJtIfB_Si3U23RKv9vvdL0iVxLMaJo17O=s160-c-k-c0x00ffffff-no-rj", "location": "US", "created": "2026-02-06", "firstVid": "2026-02-21", "lastVid": "2026-04-18", "faceless": true, "ai": false, "quality": "high", "outlier": 11.73, "tags": ["history", "culture", "documentary", "myths and folktales"], "cat": "history", "fmt": "documentary", "subs": 9190, "monthlyRev": 0, "monthlyViews": 1113415, "avgViews": 153397, "avgLen": 1294.12, "uploadsWk": 1, "rpm": 4.9459, "videos": 8}, {"id": "UCpIqZ2CpJpvB54D7WU7eKUA", "title": "Once Upon A British Time", "username": "@onceuponabritishtime", "thumb": "https://yt3.googleusercontent.com/u1kkFBBXVEUzIDqaTI-oFC2J9kRaY3UTvlhVznPfBNGOQ9hAWwSzFYZ-E9w_0av_Z3GENc47Ew=s160-c-k-c0x00ffffff-no-rj", "location": "US", "created": "2026-02-16", "firstVid": "2026-02-16", "lastVid": "2026-04-21", "faceless": true, "ai": false, "quality": "mid", "outlier": 1.86, "tags": ["cooking", "nostalgia", "lifestyle", "culture"], "cat": "cooking", "fmt": "tutorial", "subs": 24300, "monthlyRev": 5607.56, "monthlyViews": 1184542, "avgViews": 46784.71, "avgLen": 1572.71, "uploadsWk": 3.5, "rpm": 4.734, "videos": 28}, {"id": "UCUB-Wy3XzxtPdvfAmD8DMrg", "title": "Lost American Memories", "username": "@LostAmericanMemories", "thumb": "https://yt3.googleusercontent.com/7LluNb12F16pLyhcBq5BN33NvfQMSiKMFW7z5Qec5NXv25vN-IYzhuwTxh3_id4I9gISkIqNsA=s160-c-k-c0x00ffffff-no-rj", "location": "US", "created": "2026-02-04", "firstVid": "2026-02-06", "lastVid": "2026-04-19", "faceless": true, "ai": false, "quality": "mid", "outlier": 2.07, "tags": ["history", "cooking", "cultural heritage", "education"], "cat": "history", "fmt": "gaming", "subs": 53100, "monthlyRev": 28722.6, "monthlyViews": 5807332, "avgViews": 180270.65, "avgLen": 1779.95, "uploadsWk": 5.5, "rpm": 4.9459, "videos": 40}, {"id": "UCBlajCc81x-A21_uS32cUbw", "title": "Daniel Morre", "username": "@DanielMorre-y6k", "thumb": "https://yt3.googleusercontent.com/7hNO7ZIJVUQoEip23hY2DEaPWR7BejpDKoF-A16frV1uXjBzHHgBpL_IG92qLeCRP9cM7RNi=s160-c-k-c0x00ffffff-no-rj", "location": "US", "created": "2026-02-09", "firstVid": "2026-02-10", "lastVid": "2026-04-17", "faceless": true, "ai": false, "quality": "mid", "outlier": 0.15, "tags": ["politics", "news", "activism", "commentary"], "cat": "politics", "fmt": "news", "subs": 17600, "monthlyRev": 0, "monthlyViews": 1063648, "avgViews": 18196.25, "avgLen": 1027.59, "uploadsWk": 6, "rpm": 4.6633, "videos": 61}, {"id": "UCmNd9YwJEGzc0CQZSVe2oWg", "title": "Forgotten American Survival", "username": "@ForgottenAmericanSurvival", "thumb": "https://yt3.googleusercontent.com/aXSuOcZBs-DEIxPWA31KMt9MNG3xmeM_74KBYjBwsK9rfjCNljrykoOowTQibhkCyuYcNMoQ=s160-c-k-c0x00ffffff-no-rj", "location": "US", "created": "2026-03-23", "firstVid": "2026-03-23", "lastVid": "2026-04-21", "faceless": true, "ai": false, "quality": "mid", "outlier": 5.49, "tags": ["history", "survival", "american culture", "diy/crafts"], "cat": "history", "fmt": "educational", "subs": 17700, "monthlyRev": 7761.54, "monthlyViews": 1569282, "avgViews": 130773.5, "avgLen": 1705.42, "uploadsWk": 2.75, "rpm": 4.9459, "videos": 12}, {"id": "UCmyKINrAcKC0wJ9udHYvzwA", "title": "Power Shift", "username": "@PowerShiftDesk", "thumb": "https://yt3.googleusercontent.com/uI0C5ieTSY5dW8SJYZ3Rw8iq7u7ng_lLnuqtgCgoZoCGlWYAmi1KkNbIz-VahoNsU___rHSF0w=s160-c-k-c0x00ffffff-no-rj", "location": "US", "created": "2026-03-15", "firstVid": "2026-03-17", "lastVid": "2026-04-21", "faceless": true, "ai": false, "quality": "mid", "outlier": 0.87, "tags": ["politics", "news", "society", "activism"], "cat": "politics", "fmt": "commentary", "subs": 9620, "monthlyRev": 9205.65, "monthlyViews": 1974065, "avgViews": 22367.78, "avgLen": 892.61, "uploadsWk": 20, "rpm": 4.6633, "videos": 89}, {"id": "UCdR0EkTXPIqQAMCYm76HIRQ", "title": "MegaBuild Insider", "username": "@MegaBuildInsider01", "thumb": "https://yt3.googleusercontent.com/T2kJNwNxOlqBqC4SsDwfTnXybXwgJFrEhwJWdzAkijGqMoJrAsNjRy0QQpEWJX4FQU48dUSzZw=s160-c-k-c0x00ffffff-no-rj", "location": "US", "created": "2026-02-28", "firstVid": "2026-03-03", "lastVid": "2026-04-21", "faceless": true, "ai": false, "quality": "mid", "outlier": 0.51, "tags": ["engineering", "infrastructure", "construction", "disaster and accidents"], "cat": "engineering", "fmt": "documentary", "subs": 2000, "monthlyRev": 5430.09, "monthlyViews": 1067396, "avgViews": 118828.11, "avgLen": 895.56, "uploadsWk": 1.5, "rpm": 5.0872, "videos": 9}, {"id": "UClXLMgQJAxWrKJC8tMQaKbg", "title": "The DNA Archive", "username": "TheDNA_ArchiveThe", "thumb": "https://yt3.googleusercontent.com/zPE6kyVTsEAphiVnU84BT3zR8NFnLUyQm9_12EPsJYGYbPVLL0HIQTpO8MTIGkBRKy-QhZIzHQ=s160-c-k-c0x00ffffff-no-rj", "location": "—", "created": "2026-03-08", "firstVid": "2026-03-08", "lastVid": "2026-04-23", "faceless": true, "ai": false, "quality": "mid", "outlier": 0.29, "tags": ["history", "science", "anthropology", "archaeology"], "cat": "history", "fmt": "documentary", "subs": 4390, "monthlyRev": 4628.47, "monthlyViews": 1091786, "avgViews": 26872.33, "avgLen": 714.04, "uploadsWk": 6.75, "rpm": 4.2394, "videos": 45}],
+  sleep: [{"id": "UCdu1mjkqIMNeAJsFYRRqlYA", "title": "4K Ocean Realm", "username": "@4KOceanRealm", "thumb": "https://yt3.googleusercontent.com/rK2pzBy2dTZdBepE8Jqt1gizwCP9bJEv8Gx_yvSj1_YRgd9py5Ys8mfHXBvmMtwkn5OQx12S=s160-c-k-c0x00ffffff-no-rj", "location": "US", "created": "2026-02-25", "firstVid": "2026-03-02", "lastVid": "2026-04-21", "faceless": true, "ai": false, "quality": "high", "outlier": 0.33, "tags": ["wildlife", "nature documentaries", "relaxation", "travel documentary"], "cat": "wildlife", "fmt": "meditation", "subs": 1660, "monthlyRev": 0, "monthlyViews": 289664, "avgViews": 6063.92, "avgLen": 8814.36, "uploadsWk": 7, "rpm": 6.0058, "videos": 81}, {"id": "UCcUEjyUhd-s3Dj0TS0Ekjow", "title": "Sleepy History with Oliver", "username": "@SleepyHistorywithOliver", "thumb": "https://yt3.googleusercontent.com/4Qhz5VbYF9Lo5HTjSmIbpQlESoZnHF6GWtxc_RzARta-osl_bW1bf8tBdKOVkZoq_nbIp7_P=s160-c-k-c0x00ffffff-no-rj", "location": "US", "created": "2026-01-31", "firstVid": "2026-02-10", "lastVid": "2026-04-29", "faceless": true, "ai": false, "quality": "mid", "outlier": 0.78, "tags": ["history", "lifestyle", "documentary", "sleep music"], "cat": "history", "fmt": "documentary", "subs": 15000, "monthlyRev": 6109.75, "monthlyViews": 960798, "avgViews": 16574.99, "avgLen": 11131.34, "uploadsWk": 7, "rpm": 6.359, "videos": 68}, {"id": "UCGBMzlENmf1_vBgcohF9fJQ", "title": "Interstellar Dreams", "username": "InterstellarDreams-w5g", "thumb": "https://yt3.googleusercontent.com/eKvF1sqdd9MG4OCV3GRKr514sWg14osmO0L2UV2E8eG5NmZ4RmuTPUKn3AecR2mz0hjOXidFvA=s160-c-k-c0x00ffffff-no-rj", "location": "CA", "created": "2026-03-18", "firstVid": "2026-03-20", "lastVid": "2026-04-19", "faceless": true, "ai": false, "quality": "high", "outlier": 2.43, "tags": ["space & exploration", "science", "future & discoveries", "tech"], "cat": "space & exploration", "fmt": "documentary", "subs": 7730, "monthlyRev": 7129.93, "monthlyViews": 1009105, "avgViews": 31536.03, "avgLen": 7176.28, "uploadsWk": 7, "rpm": 7.0656, "videos": 32}, {"id": "UCEKvbocAns87BVIsItNvusw", "title": "After the Last Scribe", "username": "@AftertheLastScribe", "thumb": "https://yt3.googleusercontent.com/_0XvrezHz-WItguUVEHkVADnGcl8Cr-RC7zSiWFMQWDbKCyKcVw8VisJx5KBc4j3G2hK3h3mRZg=s160-c-k-c0x00ffffff-no-rj", "location": "US", "created": "2026-02-02", "firstVid": "2026-02-12", "lastVid": "2026-04-13", "faceless": true, "ai": false, "quality": "mid", "outlier": 1.84, "tags": ["religion", "history", "spirituality", "documentary"], "cat": "religion", "fmt": "documentary", "subs": 8300, "monthlyRev": 0, "monthlyViews": 590977, "avgViews": 19381.98, "avgLen": 12539.3, "uploadsWk": 3.75, "rpm": 4.809, "videos": 47}, {"id": "UCI56Iu0wy0ryDb-MCyKiueg", "title": "Sleepy UK History", "username": "@SleepyUKHistory", "thumb": "https://yt3.googleusercontent.com/AKOgyeC99w6c2-10rHH6Qc2CB2vvybn00jk0NVcfqGymvG3DD8XjPS-wlkwQMhOmJ8i154_pIQ=s160-c-k-c0x00ffffff-no-rj", "location": "—", "created": "2026-02-21", "firstVid": "2026-02-23", "lastVid": "2026-04-21", "faceless": true, "ai": false, "quality": "high", "outlier": 0.11, "tags": ["history", "mysteries and folktales", "documentary", "education"], "cat": "history", "fmt": "documentary", "subs": 3230, "monthlyRev": 1905.08, "monthlyViews": 281963, "avgViews": 13475.43, "avgLen": 7337.76, "uploadsWk": 3, "rpm": 6.7565, "videos": 21}, {"id": "UCtn8RsYLOyS5SNOX5cznEDw", "title": "Nocturnal Dread", "username": "@Nocturnal-Dread0", "thumb": "https://yt3.googleusercontent.com/wxDNABi8x3sgtDh7qwMYHnzMplEqMgEsCJg99j77ZxPPGDFcvGMipWOJUOzh2g9udLs7zmBJ=s160-c-k-c0x00ffffff-no-rj", "location": "US", "created": "2026-02-17", "firstVid": "2026-02-20", "lastVid": "2026-04-19", "faceless": true, "ai": false, "quality": "mid", "outlier": 0.86, "tags": ["horror stories", "anomalies and alternative science", "paranormal", "folklore"], "cat": "horror stories", "fmt": "stories", "subs": 2340, "monthlyRev": 0, "monthlyViews": 251331, "avgViews": 7221.4, "avgLen": 7645.9, "uploadsWk": 4.5, "rpm": 9.0086, "videos": 40}, {"id": "UCEAozZ8Oj_49fcXvmu2-BzQ", "title": "The Dusklight Stories", "username": "@TheDusklightStories", "thumb": "https://yt3.googleusercontent.com/Cmf8DPKHdY2CGb2rlCYvk2YVo_QeAfUMJUcDhrrkc7V3mNyxbuebQH1Q0pTJ5KdbnNe0VT6o=s160-c-k-c0x00ffffff-no-rj", "location": "US", "created": "2026-03-11", "firstVid": "2026-03-19", "lastVid": "2026-04-19", "faceless": true, "ai": false, "quality": "mid", "outlier": 0.15, "tags": ["life stories", "folklore", "social sciences", "history"], "cat": "life stories", "fmt": "stories", "subs": 4390, "monthlyRev": 0, "monthlyViews": 514526, "avgViews": 16087.59, "avgLen": 3200.03, "uploadsWk": 6.5, "rpm": 6.5578, "videos": 32}, {"id": "UCr55D5z3Rf0UCjlvqmNUPEg", "title": "Nocturne Classics", "username": "@NocturneClassics09", "thumb": "https://yt3.googleusercontent.com/gFl2k3HvAHOvIN88IXgfwRXZs0qCqEG2PodwoUmL9wnWRDhz5OSXQRlHKylPxXI6bfLUqlOPJw=s160-c-k-c0x00ffffff-no-rj", "location": "US", "created": "2026-02-28", "firstVid": "2026-03-24", "lastVid": "2026-04-21", "faceless": true, "ai": false, "quality": "mid", "outlier": 1.86, "tags": ["movies", "vintage photography", "film noir", "history"], "cat": "movies", "fmt": "compilation", "subs": 8370, "monthlyRev": 5500.52, "monthlyViews": 1297488, "avgViews": 22762.95, "avgLen": 5503.61, "uploadsWk": 13.75, "rpm": 4.2394, "videos": 57}, {"id": "UCe0Y8H5zTHlI22Iv6e-kvQA", "title": "Back to Ancient", "username": "BacktoAncientYT", "thumb": "https://yt3.googleusercontent.com/w7rj2kv4eV1-W8vedy2yA_W1FR4S9XJCj_rzblGXRtwryjIIRWQ_O7F8J_0d19ggGPZpbJcPAA=s160-c-k-c0x00ffffff-no-rj", "location": "—", "created": "2026-02-11", "firstVid": "2026-03-08", "lastVid": "2026-04-26", "faceless": true, "ai": false, "quality": "mid", "outlier": 1.27, "tags": ["history", "anomalies and alternative science", "documentary", "science"], "cat": "history", "fmt": "documentary", "subs": 1920, "monthlyRev": 3858.98, "monthlyViews": 588460, "avgViews": 12967.2, "avgLen": 4014.34, "uploadsWk": 7, "rpm": 6.5578, "videos": 51}, {"id": "UCuynIvIfw-_8xoy7LDjA3vA", "title": "Midnight Casebook", "username": "@MidnightCasebookus", "thumb": "https://yt3.googleusercontent.com/rOJiK_O6hn0R-IydJwPRce4nzA4cjpAQaWlZUX8MVtTUOLPQxYwByAT-rFGsj9NRUe8gc-z8=s160-c-k-c0x00ffffff-no-rj", "location": "US", "created": "2026-02-08", "firstVid": "2026-03-05", "lastVid": "2026-04-14", "faceless": true, "ai": false, "quality": "mid", "outlier": 1.18, "tags": ["crime", "mysteries", "storytelling", "documentary"], "cat": "crime", "fmt": "documentary", "subs": 4510, "monthlyRev": 0, "monthlyViews": 279213, "avgViews": 14078.1, "avgLen": 3206.9, "uploadsWk": 2.25, "rpm": 6.0058, "videos": 20}, {"id": "UCgN4d23l66YIyT9h9oi8S3A", "title": "Wild Realms Studio", "username": "@WildRealmsStudio", "thumb": "https://yt3.googleusercontent.com/gH8yLXAsv3mSoPgOkNh9jMyfM-RqyjtWl5w9c5u5VqLvsRLRIXDbRh3aLZzD79z0tQG2pk5FhQ=s160-c-k-c0x00ffffff-no-rj", "location": "US", "created": "2026-02-16", "firstVid": "2026-02-18", "lastVid": "2026-04-18", "faceless": true, "ai": false, "quality": "high", "outlier": 17.94, "tags": ["wildlife", "nature documentary", "exploration", "science"], "cat": "wildlife", "fmt": "documentary", "subs": 19500, "monthlyRev": 12112.46, "monthlyViews": 2142857, "avgViews": 261687.82, "avgLen": 3509.64, "uploadsWk": 1.25, "rpm": 5.6525, "videos": 11}, {"id": "UCw4PWFHbd2fiwQZTI00Bbfw", "title": "Top Unreal Journeys", "username": "@TopUnrealJourneys", "thumb": "https://yt3.googleusercontent.com/Vw8rs2-4F-6pSamsbb0NwPaixNU6y3PDsQDRElEVCmH9VJ-yY2zgxYPhBNmHhz_yvT9CVohu9rg=s160-c-k-c0x00ffffff-no-rj", "location": "US", "created": "2026-03-18", "firstVid": "2026-03-20", "lastVid": "2026-04-21", "faceless": true, "ai": false, "quality": "high", "outlier": 0.93, "tags": ["travel documentary", "environment", "exploration", "marine life"], "cat": "travel documentary", "fmt": "documentary", "subs": 1000, "monthlyRev": 0, "monthlyViews": 291478, "avgViews": 17297.24, "avgLen": 11160.24, "uploadsWk": 3.5, "rpm": 6.9066, "videos": 17}, {"id": "UCuVY24JiTQN9ZVjFtJZPLNA", "title": "Cold Ledger Stories", "username": "@ColdLedgerStories", "thumb": "https://yt3.googleusercontent.com/IBlICvJW6hL-r9kVD5BkMGZkBCTdXm_2gp60zPjzdQKS4ViORUfnlxpDoORDHtMEmwlSkL84Ww=s160-c-k-c0x00ffffff-no-rj", "location": "US", "created": "2026-01-29", "firstVid": "2026-02-01", "lastVid": "2026-04-17", "faceless": true, "ai": false, "quality": "mid", "outlier": 0.73, "tags": ["crime", "investigative documentaries", "mystery", "storytelling"], "cat": "crime", "fmt": "documentary", "subs": 4430, "monthlyRev": 0, "monthlyViews": 215877, "avgViews": 7648.69, "avgLen": 3077.93, "uploadsWk": 2.5, "rpm": 6.0058, "videos": 42}, {"id": "UCUVqFBfEjpQaxyJZDVIokJg", "title": "The Sky Lab", "username": "@TheSkyLab-u4j", "thumb": "https://yt3.googleusercontent.com/_pPLBl7S9CGq8LvWXKiRJ1QiC1Uqf7l-QHmo2FoNrJwSFwpfT_gUyIrQhLfAcXv4VXbtohpil3E=s160-c-k-c0x00ffffff-no-rj", "location": "CA", "created": "2026-02-20", "firstVid": "2026-02-24", "lastVid": "2026-04-21", "faceless": true, "ai": false, "quality": "mid", "outlier": 2.96, "tags": ["space & exploration", "science", "environment", "tech"], "cat": "space & exploration", "fmt": "documentary", "subs": 33400, "monthlyRev": 22879.1, "monthlyViews": 3238097, "avgViews": 58723.07, "avgLen": 6008.44, "uploadsWk": 7, "rpm": 7.0656, "videos": 57}, {"id": "UCqP-CqSIPT_5SdrFifq0O3Q", "title": "Ethiopia Scripture Vault", "username": "@EthiopiaScriptureVault", "thumb": "https://yt3.googleusercontent.com/YIGCWUHixIXL4RnFJNELbF9jqIa4pOnNES7SGhLbDobvEdZHoq2i3j6E1ihKaH0QnEZsAFfxtQ=s160-c-k-c0x00ffffff-no-rj", "location": "US", "created": "2026-02-05", "firstVid": "2026-02-09", "lastVid": "2026-04-21", "faceless": true, "ai": false, "quality": "mid", "outlier": 0.12, "tags": ["religion", "history", "mysteries", "paranormal"], "cat": "religion", "fmt": "documentary", "subs": 5650, "monthlyRev": 0, "monthlyViews": 454753, "avgViews": 10802.39, "avgLen": 3528.11, "uploadsWk": 7, "rpm": 4.809, "videos": 61}, {"id": "UCHIuqpf0qtT-TGz34R04BaA", "title": "Family Confessions", "username": "@FamilyConfessions-t4f", "thumb": "https://yt3.googleusercontent.com/14_lQ5vMRZ8QZhKlLKZ9Q-akYD6NkoG9sIdOM-54c54WoVY4CZU1HxBOx0mQfp-B98S_S5dFPQ=s160-c-k-c0x00ffffff-no-rj", "location": "US", "created": "2026-03-11", "firstVid": "2026-03-20", "lastVid": "2026-04-20", "faceless": true, "ai": false, "quality": "mid", "outlier": 1.15, "tags": ["life stories", "storytelling", "drama", "relationships"], "cat": "life stories", "fmt": "stories", "subs": 5100, "monthlyRev": 3739.58, "monthlyViews": 570252, "avgViews": 10392.2, "avgLen": 4200.75, "uploadsWk": 12.25, "rpm": 6.5578, "videos": 55}, {"id": "UC1x52v2HvZk7ORo9HIaYNDQ", "title": "Watchmen", "username": "@Watchmen-US", "thumb": "https://yt3.googleusercontent.com/EqwNeCuoQo03kLfnwBy0mFCZPBUirfhD2M_xpD72hZaSDfW0awqaACWPY9U1SVhBDcLCEvEz=s160-c-k-c0x00ffffff-no-rj", "location": "BR", "created": "2026-03-03", "firstVid": "2026-03-06", "lastVid": "2026-04-20", "faceless": true, "ai": false, "quality": "mid", "outlier": 0.83, "tags": ["history", "religion", "culture", "african culture"], "cat": "history", "fmt": "documentary", "subs": 6810, "monthlyRev": 1735.62, "monthlyViews": 330278, "avgViews": 18576.45, "avgLen": 2429.95, "uploadsWk": 3, "rpm": 5.255, "videos": 22}, {"id": "UCYaVhm2Hk3a6yq_zFgqrO6w", "title": "Jason's Tales", "username": "Jasons_TalesHFY", "thumb": "https://yt3.googleusercontent.com/JLnLTRc8gZiC5SO1nGfmE3Cxp3HFyXeVDPTZJioPXsnvdHdjWdHcXHMRPF6Jc2Gx9GGlYT2AO5Q=s160-c-k-c0x00ffffff-no-rj", "location": "CA", "created": "2026-03-30", "firstVid": "2026-04-02", "lastVid": "2026-04-27", "faceless": true, "ai": false, "quality": "mid", "outlier": 3.89, "tags": ["movies", "fantasy", "adventure", "narration"], "cat": "movies", "fmt": "commentary", "subs": 4500, "monthlyRev": 0, "monthlyViews": 586322, "avgViews": 25492.26, "avgLen": 3400.17, "uploadsWk": 5.75, "rpm": 4.3718, "videos": 23}, {"id": "UCsZa6qEd39OZ4E9xE4F3hUA", "title": "Aussie War Archives", "username": "@AussieWarArchives", "thumb": "https://yt3.googleusercontent.com/NevkIW0ODGBonJdPMV_ZeyIhGosrOCEUO9voDpy06v36s8nVrORtiLohWQm_gpTlLVPOZNm7=s160-c-k-c0x00ffffff-no-rj", "location": "AU", "created": "2026-01-31", "firstVid": "2026-02-01", "lastVid": "2026-04-10", "faceless": true, "ai": false, "quality": "high", "outlier": 2.57, "tags": ["military", "history", "documentary", "culture"], "cat": "military", "fmt": "documentary", "subs": 5460, "monthlyRev": 3338.49, "monthlyViews": 787498, "avgViews": 29699.3, "avgLen": 2531.67, "uploadsWk": 2, "rpm": 4.2394, "videos": 46}, {"id": "UCoWDRfpuKz8s8PpsjSCzLwA", "title": "Britain's Finest Hour", "username": "@BritainsFinestHour-p9r", "thumb": "https://yt3.googleusercontent.com/1-fp-Duk3iI3drBNIB44mS-Hi6RsGjriuYwK65kUDaAfaoxJM9KLXPaNUNbVRoy43f0GWP5XD0o=s160-c-k-c0x00ffffff-no-rj", "location": "GB", "created": "2026-03-03", "firstVid": "2026-03-04", "lastVid": "2026-04-21", "faceless": true, "ai": false, "quality": "mid", "outlier": 0.53, "tags": ["history", "military", "aviation", "documentary"], "cat": "military", "fmt": "documentary", "subs": 1260, "monthlyRev": 1469.94, "monthlyViews": 326340, "avgViews": 6539.36, "avgLen": 2476.18, "uploadsWk": 5.75, "rpm": 4.5043, "videos": 55}, {"id": "UCBRyo6oyHTGJhyJEx0YWw6Q", "title": "Royal Scandals & Desires", "username": "@RoyalScandalsDesires", "thumb": "https://yt3.googleusercontent.com/qmpu1GzZF4-g61K95Ok_fe1PLiMpRluz8LjUjGIhNhwEnCMreLA3xsC0hGU4nbo7fcnRsb49=s160-c-k-c0x00ffffff-no-rj", "location": "BR", "created": "2026-02-14", "firstVid": "2026-02-14", "lastVid": "2026-04-19", "faceless": true, "ai": false, "quality": "mid", "outlier": 1.39, "tags": ["movies", "television", "stories", "history"], "cat": "life stories", "fmt": "stories", "subs": 6260, "monthlyRev": 3935.85, "monthlyViews": 600182, "avgViews": 10563.2, "avgLen": 3476.73, "uploadsWk": 5.25, "rpm": 6.5578, "videos": 66}]
+};
+
+const SECTIONS = {
+  highgrowth: {
+    title: 'High-Growth',
+    color: '#ff5e1a',
+    desc: 'Channels generating over 1 million monthly views, launched within the last 90 days, minimum 5,000 average views per video. All carry a Nexlev RPM of $4.00 or higher.',
+    filters: ['monthly views ≥ 1M', 'avg views/video ≥ 5K', 'RPM ≥ $4', 'created < 90d'],
+  },
+  sleep: {
+    title: 'Sleep Channels',
+    color: '#9d7bff',
+    desc: 'Long-form sleep, ambient, and bedtime content channels. Average video length 40+ minutes (2,400s+), 200K+ monthly views, all under 90 days old. Nexlev RPM $4.00 minimum applied.',
+    filters: ['avg ≥ 40 min', 'monthly views ≥ 200K', 'RPM ≥ $4', 'created < 90d'],
+  },
+};
+
+let activeTab = 'highgrowth';
+let activeView = 'grid';
+let searchQ = '';
+let sortKey = 'monthlyViews';
+
+function fmt(n){
+  if(n==null||n===0) return '—';
+  if(n>=1e9) return (n/1e9).toFixed(2)+'B';
+  if(n>=1e6) return (n/1e6).toFixed(2)+'M';
+  if(n>=1e3) return (n/1e3).toFixed(1)+'K';
+  return Math.round(n).toLocaleString();
+}
+function fmtMoney(n){
+  if(n==null||n===0) return '—';
+  if(n>=1e6) return '$'+(n/1e6).toFixed(2)+'M';
+  if(n>=1e3) return '$'+(n/1e3).toFixed(1)+'K';
+  return '$'+Math.round(n).toLocaleString();
+}
+function fmtMin(s){
+  if(!s) return '—';
+  const m=s/60;
+  return m>=60?(m/60).toFixed(1)+'h':m.toFixed(0)+'m';
+}
+function fmtRpm(r){
+  if(!r) return '—';
+  return '$'+r.toFixed(2);
+}
+function rpmClass(r){
+  if(r>=10) return 'high';
+  if(r>=5) return 'mid';
+  return 'base';
+}
+function ageDays(d){
+  const dt=new Date(d);
+  const now=new Date('2026-04-29');
+  return Math.round((now-dt)/86400000);
+}
+function outlierBadge(o){
+  if(o>=5) return '<span class="badge">'+o.toFixed(1)+'x</span>';
+  if(o>=1.5) return '<span class="badge med">'+o.toFixed(1)+'x</span>';
+  return '<span class="badge low">'+o.toFixed(2)+'x</span>';
+}
+function qualityClass(q){ return q==='high'?'q-high':q==='mid'?'q-mid':''; }
+
+function filterAndSort(arr){
+  const q=searchQ.trim().toLowerCase();
+  let out=arr;
+  if(q){
+    out=out.filter(c=>{
+      const hay=[c.title,c.cat,c.fmt,c.location,...(c.tags||[])].join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+  }
+  out=[...out].sort((a,b)=>{
+    if(sortKey==='created') return new Date(b.created)-new Date(a.created);
+    return (b[sortKey]??0)-(a[sortKey]??0);
+  });
+  return out;
+}
+
+function renderCard(c, sectionKey){
+  const url='https://www.youtube.com/channel/'+c.id;
+  const isSleep=sectionKey==='sleep';
+  const lenOrUploads=isSleep
+    ?`<div class="stat"><div class="s-label">Avg Length</div><div class="s-val purple">${fmtMin(c.avgLen)}</div></div>`
+    :`<div class="stat"><div class="s-label">Uploads/wk</div><div class="s-val">${c.uploadsWk?.toFixed(1)||'—'}</div></div>`;
+  return `
+    <div class="card" data-section="${sectionKey}" onclick="window.open('${url}','_blank')">
+      <div class="c-head">
+        <img class="c-thumb" src="${c.thumb}" loading="lazy" alt="${c.title}" onerror="this.style.display='none'">
+        <div class="c-title-block">
+          <div class="c-title">${c.title}</div>
+          <div class="c-handle">${c.username||c.id}</div>
+        </div>
+      </div>
+      <div class="c-stats">
+        <div class="stat"><div class="s-label">Mo Views</div><div class="s-val orange">${fmt(c.monthlyViews)}</div></div>
+        <div class="stat"><div class="s-label">Mo Revenue</div><div class="s-val green">${fmtMoney(c.monthlyRev)}</div></div>
+        <div class="stat"><div class="s-label">Subs</div><div class="s-val">${fmt(c.subs)}</div></div>
+        <div class="stat"><div class="s-label">Avg Views</div><div class="s-val yellow">${fmt(c.avgViews)}</div></div>
+        ${lenOrUploads}
+        <div class="stat"><div class="s-label">RPM</div><div class="s-val"><span class="rpm-badge ${rpmClass(c.rpm)}">${fmtRpm(c.rpm)}</span></div></div>
+      </div>
+      <div class="c-meta">
+        <span class="tag cat">${c.cat}</span>
+        <span class="tag fmt">${c.fmt}</span>
+        <span class="tag ${qualityClass(c.quality)}">Q · ${c.quality}</span>
+        ${c.faceless?'<span class="tag faceless">faceless</span>':''}
+      </div>
+      <div class="c-foot">
+        <div class="outlier">OUTLIER ${outlierBadge(c.outlier||0)}</div>
+        <div>${ageDays(c.created)}d old${c.location&&c.location!=='—'?' · '+c.location:''}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderTable(arr, sectionKey){
+  const isSleep=sectionKey==='sleep';
+  const rows=arr.map(c=>{
+    const url='https://www.youtube.com/channel/'+c.id;
+    const lenOrUploads=isSleep
+      ?`<td class="num purple">${fmtMin(c.avgLen)}</td>`
+      :`<td class="num">${c.uploadsWk?.toFixed(1)||'—'}/wk</td>`;
+    return `<tr>
+        <td class="title">${c.title}</td>
+        <td>${c.cat}</td>
+        <td>${c.fmt}</td>
+        <td class="num orange">${fmt(c.monthlyViews)}</td>
+        <td class="num green">${fmtMoney(c.monthlyRev)}</td>
+        <td class="num">${fmt(c.subs)}</td>
+        <td class="num">${fmt(c.avgViews)}</td>
+        ${lenOrUploads}
+        <td class="num"><span class="rpm-badge ${rpmClass(c.rpm)}">${fmtRpm(c.rpm)}</span></td>
+        <td class="num">${(c.outlier||0).toFixed(2)}x</td>
+        <td class="num">${ageDays(c.created)}d</td>
+        <td><a href="${url}" target="_blank" class="t-link" onclick="event.stopPropagation()">OPEN ↗</a></td>
+      </tr>`;
+  }).join('');
+  const lenHeader=isSleep?'<th style="text-align:right">Avg Len</th>':'<th style="text-align:right">Uploads/wk</th>';
+  return `
+    <div class="table-view ${activeView==='table'?'active':''}">
+      <table>
+        <thead><tr>
+          <th>Channel</th><th>Category</th><th>Format</th>
+          <th style="text-align:right">Mo Views</th>
+          <th style="text-align:right">Mo Rev</th>
+          <th style="text-align:right">Subs</th>
+          <th style="text-align:right">Avg Views</th>
+          ${lenHeader}
+          <th style="text-align:right">RPM</th>
+          <th style="text-align:right">Outlier</th>
+          <th style="text-align:right">Age</th>
+          <th></th>
+        </tr></thead>
+        <tbody>${rows||'<tr><td colspan="12" class="empty">No matches</td></tr>'}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderSections(){
+  const root=document.getElementById('sections');
+  root.innerHTML=Object.keys(SECTIONS).map(key=>{
+    const sec=SECTIONS[key];
+    const arr=filterAndSort(DATA[key]||[]);
+    const cards=arr.map(c=>renderCard(c,key)).join('');
+    const filterTags=sec.filters.map(f=>`<span class="filter-tag">${f}</span>`).join('');
+    return `
+      <div class="section${key===activeTab?' active':''}" id="sec-${key}">
+        <div class="section-intro">
+          <div class="desc">${filterTags}<br><br>${sec.desc}</div>
+          <div class="section-count"><span class="num">${arr.length}</span> channels</div>
+        </div>
+        <div class="grid${activeView==='grid'?' active':''}">
+          ${cards||'<div class="empty">No channels match current filters.</div>'}
+        </div>
+        ${renderTable(arr,key)}
+      </div>
+    `;
+  }).join('');
+}
+
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    activeTab=btn.dataset.tab;
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    renderSections();
+  });
+});
+
+document.getElementById('search-input').addEventListener('input',e=>{
+  searchQ=e.target.value;
+  renderSections();
+});
+
+document.getElementById('sort-select').addEventListener('change',e=>{
+  sortKey=e.target.value;
+  renderSections();
+});
+
+document.querySelectorAll('.view-toggle button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    activeView=btn.dataset.view;
+    document.querySelectorAll('.view-toggle button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    renderSections();
+  });
+});
+
+renderSections();
+</script>
+</body>
+</html>
