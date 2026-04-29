@@ -484,30 +484,12 @@ updateKPIs();
 renderSections();
 </script>
 
-<!-- Refresh modal -->
-<div class="modal-overlay" id="token-modal">
-  <div class="modal-box">
-    <h3>GitHub Token</h3>
-    <p>One-time setup. Paste a GitHub Personal Access Token with <b>workflow</b> scope. Stored only in your browser — never sent anywhere except GitHub.</p>
-    <p style="margin-bottom:8px">Create one at: <a href="https://github.com/settings/tokens/new?scopes=workflow" target="_blank" style="color:var(--acc-4)">github.com/settings/tokens/new</a> → check <b>workflow</b></p>
-    <input type="password" id="token-input" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off">
-    <div class="m-btns">
-      <button class="m-cancel" onclick="closeModal()">Cancel</button>
-      <button class="m-ok" onclick="saveToken()">Save &amp; Refresh</button>
-    </div>
-  </div>
-</div>
-
 <div class="refresh-toast" id="refresh-toast">
   <span class="t-icon" id="toast-icon">⏳</span>
   <span id="toast-msg">Triggering refresh…</span>
 </div>
 
 <script>
-const REPO = 'brederodesabine1-hash/-nexlev-dashboard-';
-const WORKFLOW = 'refresh.yml';
-const TOKEN_KEY = 'nexlev_gh_token';
-
 function showToast(msg, type='', icon='⏳'){
   const t = document.getElementById('refresh-toast');
   document.getElementById('toast-msg').textContent = msg;
@@ -515,115 +497,48 @@ function showToast(msg, type='', icon='⏳'){
   t.className = 'refresh-toast show' + (type ? ' '+type : '');
 }
 function hideToast(){ document.getElementById('refresh-toast').className = 'refresh-toast'; }
-
-function closeModal(){
-  document.getElementById('token-modal').classList.remove('show');
-}
-
-function saveToken(){
-  const val = document.getElementById('token-input').value.trim();
-  if(!val){ alert('Paste a token first.'); return; }
-  localStorage.setItem(TOKEN_KEY, val);
-  closeModal();
-  triggerWorkflow(val);
-}
+function closeModal(){ document.getElementById('token-modal').classList.remove('show'); }
 
 async function handleRefresh(){
-  const token = localStorage.getItem(TOKEN_KEY);
-  if(!token){
-    document.getElementById('token-modal').classList.add('show');
-    return;
-  }
-  triggerWorkflow(token);
-}
-
-async function triggerWorkflow(token){
   const btn = document.getElementById('refresh-btn');
   btn.disabled = true;
-  btn.textContent = '⏳ REFRESHING…';
-  showToast('Triggering GitHub Actions…', '', '⏳');
+  btn.textContent = '⏳ FETCHING…';
+  showToast('Fetching fresh NexLev data… (~30–60s)', '', '⏳');
 
   try {
-    const res = await fetch(
-      `https://api.github.com/repos/${REPO}/actions/workflows/${WORKFLOW}/dispatches`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `token ${token}`,
-          'Accept': 'application/vnd.github+json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ ref: 'main' }),
-      }
-    );
-
-    if(res.status === 401 || res.status === 403){
-      localStorage.removeItem(TOKEN_KEY);
-      btn.disabled = false;
-      btn.textContent = '↻ REFRESH DATA';
-      showToast('Token invalid or expired. Click refresh to re-enter.', 'err', '✕');
-      setTimeout(hideToast, 4000);
-      return;
+    const res = await fetch('/api/nexlev', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Server error ' + res.status);
     }
+    const data = await res.json();
 
-    if(!res.ok){
-      throw new Error('GitHub API returned ' + res.status);
-    }
+    // Update DATA in memory
+    if (data.highgrowth) DATA.highgrowth = data.highgrowth;
+    if (data.sleep)       DATA.sleep       = data.sleep;
+    if (data.automation)  DATA.automation  = data.automation;
 
-    showToast('Workflow started — refreshing in ~2 min…', '', '⏳');
-    pollAndReload(token);
+    // Update generated date in header/footer
+    document.querySelectorAll('.meta div').forEach(el => {
+      if (el.textContent.startsWith('Generated')) el.textContent = 'Generated ' + data.generated;
+    });
+    document.querySelectorAll('footer div').forEach(el => {
+      if (el.textContent.startsWith('Generated')) el.textContent = 'Generated ' + data.generated;
+    });
+
+    updateKPIs();
+    renderSections();
+    btn.disabled = false;
+    btn.textContent = '↻ REFRESH DATA';
+    showToast('Dashboard updated with fresh data!', 'ok', '✓');
+    setTimeout(hideToast, 4000);
 
   } catch(e) {
     btn.disabled = false;
     btn.textContent = '↻ REFRESH DATA';
     showToast('Error: ' + e.message, 'err', '✕');
-    setTimeout(hideToast, 5000);
+    setTimeout(hideToast, 6000);
   }
-}
-
-async function pollAndReload(token){
-  const btn = document.getElementById('refresh-btn');
-  let attempts = 0;
-  const max = 20; // ~5 min timeout
-
-  const poll = setInterval(async () => {
-    attempts++;
-    try {
-      const res = await fetch(
-        `https://api.github.com/repos/${REPO}/actions/workflows/${WORKFLOW}/runs?per_page=1`,
-        { headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github+json' } }
-      );
-      const data = await res.json();
-      const run = data.workflow_runs?.[0];
-
-      if(run?.status === 'completed' && run?.conclusion === 'success'){
-        clearInterval(poll);
-        showToast('Done! Reloading dashboard…', 'ok', '✓');
-        setTimeout(() => location.reload(), 1500);
-        return;
-      }
-      if(run?.status === 'completed' && run?.conclusion !== 'success'){
-        clearInterval(poll);
-        btn.disabled = false;
-        btn.textContent = '↻ REFRESH DATA';
-        showToast('Workflow failed. Check GitHub Actions.', 'err', '✕');
-        return;
-      }
-
-      const elapsed = attempts * 15;
-      showToast(`Refreshing data… ${elapsed}s elapsed`, '', '⏳');
-
-    } catch(e) {
-      // network error, keep polling
-    }
-
-    if(attempts >= max){
-      clearInterval(poll);
-      btn.disabled = false;
-      btn.textContent = '↻ REFRESH DATA';
-      showToast('Timed out. Check GitHub Actions manually.', 'err', '✕');
-    }
-  }, 15000);
 }
 </script>
 </body>
