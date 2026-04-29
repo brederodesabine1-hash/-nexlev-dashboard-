@@ -1,0 +1,66 @@
+name: Refresh NexLev Dashboard
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 7 * * 1'   # Monday 9am Amsterdam (CEST)
+    - cron: '0 7 * * 5'   # Friday 9am Amsterdam (CEST)
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run NexLev refresh
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CLAUDE_CODE_USE_BEDROCK: false
+        run: |
+          claude --dangerously-skip-permissions -p "
+          You refresh the YouTube niche research dashboard. File to update: index.html in the current directory.
+
+          GOAL: find 70+ qualifying channels total across 3 sections.
+
+          Step 1: Compute dates
+          Run: python3 -c \"from datetime import date, timedelta; today=date.today(); cutoff=today-timedelta(days=90); print('TODAY:',today.isoformat()); print('CUTOFF:',cutoff.isoformat())\"
+
+          Step 2: Run 6 NexLev searches via the NexLev MCP tool search_niche_finder_channels SIX times. Use the cutoff date computed above.
+
+          Search 1 - High-Growth A: query='fast growing viral channel trending documentary history', channelCreatedAfter=CUTOFF, minMonthlyViews=1000000, minAvgViewsPerVideo=5000, limit=100
+          Search 2 - High-Growth B: query='science education technology finance business news', channelCreatedAfter=CUTOFF, minMonthlyViews=1000000, minAvgViewsPerVideo=5000, limit=100
+          Search 3 - Sleep A: query='sleep music relaxing sounds meditation ambient nature', channelCreatedAfter=CUTOFF, minMonthlyViews=200000, minAvgVideoLength=2400, limit=100
+          Search 4 - Sleep B: query='long form bedtime stories narration history documentary calm', channelCreatedAfter=CUTOFF, minMonthlyViews=200000, minAvgVideoLength=2400, limit=100
+          Search 5 - Faceless A: query='faceless automation viral content no face creator', channelCreatedAfter=CUTOFF, minMonthlyViews=1000000, isFaceless=true, limit=100
+          Search 6 - Faceless B: query='animation compilation reaction commentary internet culture', channelCreatedAfter=CUTOFF, minMonthlyViews=1000000, isFaceless=true, limit=100
+
+          Step 3: Parse each channel from the responses. If result is saved to a file, read it with: import json; raw=json.load(open(path)); channels=json.loads(raw[1]['text'])['channels']
+
+          Parse each channel: id=ytChannelId, title, username, thumb=thumbnailUrl, location(or dash), created=channelCreationDate, firstVid/lastVid from stats, faceless=isFaceless, ai=isAiChannel, quality, outlier=outlierScore, tags, cat=category.name, fmt=format.name, subs=stats.subscribers, monthlyRev=stats.monthlyRevenue, monthlyViews=stats.monthlyViews, avgViews=stats.avgViewsPerVideo, avgLen=stats.avgVideoLength, uploadsWk=stats.uploadsPerWeek, rpm=stats.rpm.total(or stats.rpm if number), videos=stats.totalVideos
+
+          Filter: highgrowth = rpm>=4 AND monthlyViews>=1000000 AND avgViews>=5000 (merge+dedup searches 1+2)
+          Filter: sleep = rpm>=4 AND monthlyViews>=200000 AND avgLen>=2400 (merge+dedup searches 3+4)
+          Filter: automation = monthlyViews>=1000000 AND faceless=true AND not in highgrowth ids (merge+dedup searches 5+6)
+
+          Step 4: Read index.html, replace the const DATA = {...}; block with: const DATA = {\"highgrowth\": HG_JSON, \"sleep\": SL_JSON, \"automation\": AUT_JSON};
+          Also update all 'Generated YYYY-MM-DD' strings to today's date, and update 'NN channels · 3 sectors' to the new total.
+          Write back to index.html.
+
+          Step 5: git config user.email 'nexlev-bot@auto.sh' && git config user.name 'NexLev Auto' && git add index.html && git commit -m 'chore: refresh dashboard' && git push
+
+          Print final channel counts per section and total.
+          " --mcp-config '{"mcpServers":{"NexLev":{"url":"https://prod.dashboard.nexlev.io/api/claude-mcp"}}}'
+
+      - name: Verify commit
+        run: git log --oneline -3
