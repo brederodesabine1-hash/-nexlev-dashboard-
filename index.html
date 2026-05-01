@@ -484,6 +484,19 @@ updateKPIs();
 renderSections();
 </script>
 
+<div class="modal-overlay" id="token-modal">
+  <div class="modal-box">
+    <h3>One-time setup</h3>
+    <p>Paste a GitHub token with <b>workflow</b> scope. Stored in your browser only — never sent anywhere except GitHub.</p>
+    <p style="margin-bottom:8px">Get one: <a href="https://github.com/settings/tokens/new?scopes=workflow" target="_blank" style="color:var(--acc-4)">github.com/settings/tokens/new</a> → check <b>workflow</b></p>
+    <input type="password" id="token-input" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off">
+    <div class="m-btns">
+      <button class="m-cancel" onclick="closeModal()">Cancel</button>
+      <button class="m-ok" onclick="saveToken()">Save &amp; Search Now</button>
+    </div>
+  </div>
+</div>
+
 <div class="refresh-toast" id="refresh-toast">
   <span class="t-icon" id="toast-icon">⏳</span>
   <span id="toast-msg">Triggering refresh…</span>
@@ -491,6 +504,9 @@ renderSections();
 
 <script>
 const RAW_URL = 'https://raw.githubusercontent.com/brederodesabine1-hash/-nexlev-dashboard-/main/index.html';
+const REPO    = 'brederodesabine1-hash/-nexlev-dashboard-';
+const WORKFLOW = 'refresh.yml';
+const TOKEN_KEY = 'nexlev_gh_token';
 
 function showToast(msg, type='', icon='⏳'){
   const t = document.getElementById('refresh-toast');
@@ -499,72 +515,113 @@ function showToast(msg, type='', icon='⏳'){
   t.className = 'refresh-toast show' + (type ? ' '+type : '');
 }
 function hideToast(){ document.getElementById('refresh-toast').className = 'refresh-toast'; }
+function closeModal(){ document.getElementById('token-modal').classList.remove('show'); }
+
+function saveToken(){
+  const val = document.getElementById('token-input').value.trim();
+  if(!val){ alert('Paste a token first.'); return; }
+  localStorage.setItem(TOKEN_KEY, val);
+  closeModal();
+  triggerAndPoll(val);
+}
 
 async function handleRefresh(){
+  const token = localStorage.getItem(TOKEN_KEY);
+  if(!token){
+    document.getElementById('token-modal').classList.add('show');
+    setTimeout(() => document.getElementById('token-input').focus(), 100);
+    return;
+  }
+  triggerAndPoll(token);
+}
+
+async function triggerAndPoll(token){
   const btn = document.getElementById('refresh-btn');
   btn.disabled = true;
-  btn.textContent = '⏳ CHECKING…';
-  showToast('Checking for latest data…', '', '⏳');
+  btn.textContent = '⏳ FETCHING…';
+  showToast('Triggering NexLev channel search…', '', '⏳');
 
+  // Trigger workflow
   try {
-    const res = await fetch(RAW_URL + '?t=' + Date.now());
-    if (!res.ok) throw new Error('Could not reach GitHub (' + res.status + ')');
-    const html = await res.text();
-
-    // Extract DATA block robustly
-    const dataStart = html.indexOf('const DATA = ');
-    const sectionsStart = html.indexOf('\nconst SECTIONS = ', dataStart);
-    if (dataStart === -1 || sectionsStart === -1) throw new Error('Could not locate DATA block in source');
-    let dataStr = html.slice(dataStart + 'const DATA = '.length, sectionsStart).trim().replace(/;$/, '').trim();
-    let freshData;
-    try { freshData = JSON.parse(dataStr); }
-    catch(pe) { throw new Error('Could not parse channel data: ' + pe.message); }
-
-    // Extract generated date
-    const dateMatch = html.match(/Generated (\d{4}-\d{2}-\d{2})/);
-    const freshDate = dateMatch ? dateMatch[1] : '?';
-
-    // Extract channel count
-    const countMatch = html.match(/(\d+) channels · 3 sectors/);
-    const freshCount = countMatch ? countMatch[1] : '?';
-
-    // Check if newer
-    const currentDate = document.querySelector('.meta')?.textContent.match(/Generated (\d{4}-\d{2}-\d{2})/)?.[1] || '';
-
-    if (freshDate === currentDate) {
-      btn.disabled = false;
-      btn.textContent = '↻ REFRESH DATA';
-      showToast('Already up to date · ' + freshDate, 'ok', '✓');
-      setTimeout(hideToast, 3000);
-      return;
+    const r = await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/${WORKFLOW}/dispatches`, {
+      method: 'POST',
+      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ref: 'main' })
+    });
+    if(r.status === 401 || r.status === 403){
+      localStorage.removeItem(TOKEN_KEY);
+      btn.disabled = false; btn.textContent = '↻ REFRESH DATA';
+      showToast('Token expired — click refresh to re-enter', 'err', '✕');
+      setTimeout(hideToast, 4000); return;
     }
-
-    // Update DATA
-    if (freshData.highgrowth) DATA.highgrowth = freshData.highgrowth;
-    if (freshData.sleep)      DATA.sleep      = freshData.sleep;
-    if (freshData.automation) DATA.automation = freshData.automation;
-
-    // Update dates + count in DOM
-    document.querySelectorAll('.meta div, footer div').forEach(el => {
-      if (el.textContent.match(/Generated \d{4}/)) el.textContent = 'Generated ' + freshDate;
-    });
-    document.querySelectorAll('.meta div').forEach(el => {
-      if (el.textContent.match(/\d+ channels · 3 sectors/)) el.textContent = freshCount + ' channels · 3 sectors';
-    });
-
-    updateKPIs();
-    renderSections();
-    btn.disabled = false;
-    btn.textContent = '↻ REFRESH DATA';
-    showToast('Updated · ' + freshDate + ' · ' + freshCount + ' channels', 'ok', '✓');
-    setTimeout(hideToast, 4000);
-
-  } catch(e) {
-    btn.disabled = false;
-    btn.textContent = '↻ REFRESH DATA';
+    if(!r.ok) throw new Error('GitHub API error ' + r.status);
+  } catch(e){
+    btn.disabled = false; btn.textContent = '↻ REFRESH DATA';
     showToast('Error: ' + e.message, 'err', '✕');
-    setTimeout(hideToast, 6000);
+    setTimeout(hideToast, 5000); return;
   }
+
+  // Poll for completion
+  showToast('Searching for new channels… 0s', '', '⏳');
+  let elapsed = 0;
+  const poll = setInterval(async () => {
+    elapsed += 15;
+    try {
+      const r = await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/${WORKFLOW}/runs?per_page=1`, {
+        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github+json' }
+      });
+      const d = await r.json();
+      const run = d.workflow_runs?.[0];
+
+      if(run?.status === 'completed'){
+        clearInterval(poll);
+        if(run.conclusion !== 'success'){
+          btn.disabled = false; btn.textContent = '↻ REFRESH DATA';
+          showToast('Workflow failed — check GitHub Actions', 'err', '✕'); return;
+        }
+        // Fetch fresh data from GitHub
+        showToast('Loading new channels…', '', '⏳');
+        await loadFreshData();
+        btn.disabled = false; btn.textContent = '↻ REFRESH DATA';
+        return;
+      }
+      showToast(`Searching for new channels… ${elapsed}s`, '', '⏳');
+    } catch(e){ /* keep polling */ }
+
+    if(elapsed >= 300){
+      clearInterval(poll);
+      btn.disabled = false; btn.textContent = '↻ REFRESH DATA';
+      showToast('Timed out — check GitHub Actions', 'err', '✕');
+    }
+  }, 15000);
+}
+
+async function loadFreshData(){
+  const html = await fetch(RAW_URL + '?t=' + Date.now()).then(r => r.text());
+  const dataStart = html.indexOf('const DATA = ');
+  const sectionsStart = html.indexOf('\nconst SECTIONS = ', dataStart);
+  if(dataStart === -1 || sectionsStart === -1) throw new Error('Could not parse data');
+  const dataStr = html.slice(dataStart + 'const DATA = '.length, sectionsStart).trim().replace(/;$/, '');
+  const fresh = JSON.parse(dataStr);
+
+  if(fresh.highgrowth) DATA.highgrowth = fresh.highgrowth;
+  if(fresh.sleep)      DATA.sleep      = fresh.sleep;
+  if(fresh.automation) DATA.automation = fresh.automation;
+
+  const freshDate = (html.match(/Generated (\d{4}-\d{2}-\d{2})/) || [])[1] || '';
+  const freshCount = (html.match(/(\d+) channels · 3 sectors/) || [])[1] || '';
+
+  document.querySelectorAll('.meta div, footer div').forEach(el => {
+    if(el.textContent.match(/Generated \d{4}/)) el.textContent = 'Generated ' + freshDate;
+  });
+  document.querySelectorAll('.meta div').forEach(el => {
+    if(el.textContent.match(/\d+ channels · 3 sectors/)) el.textContent = freshCount + ' channels · 3 sectors';
+  });
+
+  updateKPIs();
+  renderSections();
+  showToast('✓ ' + freshCount + ' fresh channels loaded · ' + freshDate, 'ok', '✓');
+  setTimeout(hideToast, 5000);
 }
 </script>
 </body>
