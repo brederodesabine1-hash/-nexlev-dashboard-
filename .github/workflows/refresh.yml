@@ -60,7 +60,7 @@ jobs:
           Step 5: git config user.email 'nexlev-bot@auto.sh' && git config user.name 'NexLev Auto' && git add index.html && git commit -m 'chore: refresh dashboard' && git push
 
           Print final channel counts per section and total.
-          " --mcp-config '{"mcpServers":{"NexLev":{"url":"https://prod.dashboard.nexlev.io/api/claude-mcp"}}}'
+          " --mcp-config '{"mcpServers":{"NexLev":{"type":"sse","url":"https://prod.dashboard.nexlev.io/api/claude-mcp"}}}'
 
       - name: Verify commit
         run: git log --oneline -3
